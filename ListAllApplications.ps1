@@ -1,18 +1,12 @@
 # Author: Miguel Alex Cantu
 # Date: 05/11/2020
 # Description:
-# This script lists all the applications in our Azure AD tenant
-
-# Loading functions
-. ./AzureAuthenticate.ps1
+# This script lists all the applications in the Azure AD tenant
 
 # Graph API endpoints
 $azureADAppsURI = 'https://graph.microsoft.com/v1.0/applications'
 
-# Getting access tokens
-$accessToken = Get-AccessToken
-
-function List-AllApps {
+function List-AllApps($accessToken) {
     $azureADApplications = @()
 
     $azureADApps = Invoke-RestMethod -Headers @{Authorization = "Bearer $($accessToken.AccessToken)" } `
@@ -29,11 +23,11 @@ function List-AllApps {
             do {
                 $azureADApps = $null
                 $azureADApps = Invoke-RestMethod -Headers @{Authorization = "Bearer $($accessToken.AccessToken)" } `
-                -Uri $azureADAppsURI `
+                -Uri $nextPageURI `
                 -Method Get
                 if ($azureADApps.value) {
                     $azureADApplications += $azureADApps.value
-                    $azureADApplications.Count
+                    Write-Debug "$($azureADApplications.Count)"
                 }
                 if ($azureADApps.'@odata.nextLink'){
                     $nextPageURI = $azureADApps.'@odata.nextLink'
@@ -44,8 +38,10 @@ function List-AllApps {
             } until (!$nextPageURI)
         }
     }
+    $azureADApplicationsData = @{}
+    foreach ($app in $azureADApplications) {
+        $azureADApplicationsData[$app.id] = $app
+    }
 
-    return $azureADApplications
+    return $azureADApplicationsData
 }
-
-List-AllApps
