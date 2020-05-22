@@ -18,8 +18,7 @@ $azureApplications = List-AllApps($accessToken)
 $azureServicePrincipals = List-AllServicePrincipals($accessToken)
 $reportedApplications = @()
 
-
-$testcount = 0
+# Looping through all service principals
 foreach ($app in $azureServicePrincipals.GetEnumerator()) {
 
     $reportEntry = $reportTemplate.PsObject.Copy()
@@ -32,7 +31,6 @@ foreach ($app in $azureServicePrincipals.GetEnumerator()) {
     }
 
     # Get groups and users assigned to service principal
-    
     Write-Debug "Getting groups assigned to application $($app.Value.appDisplayName)"
     $appRoleAssignedToURI = "https://graph.microsoft.com/v1.0/servicePrincipals/$($app.Name)/appRoleAssignedTo"
     $appRoleAssignedResponse = Invoke-RestMethod -Headers @{Authorization = "Bearer $($accessToken.AccessToken)"} `
@@ -69,9 +67,8 @@ foreach ($app in $azureServicePrincipals.GetEnumerator()) {
         "$($app.value.appDisplayName): $($appSignIns.value.Count) recent signIns"
         $reportEntry | Add-Member -Type NoteProperty -Name "recentSignIns" -Value '0'
     }
+    # This is to prevent rate limits
     Start-Sleep -s 1
-    #$reportEntry.signInAudience = $app.signInAudience
-    #$reportEntry | Add-Member -Type NoteProperty -Name ""
     $reportedApplications += $reportEntry
 }
 
