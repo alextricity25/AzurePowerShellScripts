@@ -40,7 +40,7 @@ function List-AllApps($accessToken) {
     }
     $azureADApplicationsData = @{}
     foreach ($app in $azureADApplications) {
-        $azureADApplicationsData[$app.id] = $app
+        $azureADApplicationsData[$app.appId] = $app
     }
 
     return $azureADApplicationsData
